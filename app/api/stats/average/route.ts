@@ -2,14 +2,27 @@ import { redis } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+const VALID_LOCALES = ["ru", "uk"] as const;
+type ValidLocale = (typeof VALID_LOCALES)[number];
+
+export async function GET(request: Request) {
   try {
-    // Collect all *:score_sum keys via SCAN
+    const { searchParams } = new URL(request.url);
+    const locale = searchParams.get("locale");
+
+    if (!locale || !VALID_LOCALES.includes(locale as ValidLocale)) {
+      return Response.json(
+        { error: "locale is required and must be 'ru' or 'uk'" },
+        { status: 400 }
+      );
+    }
+
+    const sumSuffix = `:${locale}:score_sum`;
     let cursor = 0;
     const sumKeys: string[] = [];
     do {
       const [next, keys] = await redis.scan(cursor, {
-        match: "*:score_sum",
+        match: `*${sumSuffix}`,
         count: 100,
       });
       cursor = Number(next);
@@ -20,7 +33,9 @@ export async function GET() {
       return Response.json({ average: 0, count: 0 });
     }
 
-    const countKeys = sumKeys.map((k) => k.slice(0, -":score_sum".length) + ":score_count");
+    const countKeys = sumKeys.map(
+      (k) => k.slice(0, -sumSuffix.length) + `:${locale}:score_count`
+    );
     const values = await redis.mget<(number | null)[]>(...sumKeys, ...countKeys);
 
     const half = sumKeys.length;

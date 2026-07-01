@@ -1,21 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PLAY_STORE_URL, QUIZ_URL, TIER_CONFIG } from "@/lib/constants";
+import { PLAY_STORE_URL, QUIZ_URL } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
 import type { SessionQuestion } from "@/lib/quiz-engine";
+import type { Strings } from "@/lib/i18n/types";
 
 type Props = {
   score: number;
   total: number;
   wrongQuestions: { sq: SessionQuestion; answeredIndex: number | null }[];
   onRestart: () => void;
+  strings: Strings;
+  locale: "ru" | "uk";
 };
 
-function getTier(score: number) {
-  return (
-    TIER_CONFIG.find((t) => score >= t.min && score <= t.max) ?? TIER_CONFIG[0]
-  );
+function getTier(score: number, tiers: Strings["tiers"]) {
+  return tiers.find((t) => score >= t.min && score <= t.max) ?? tiers[0];
 }
 
 export default function QuizResult({
@@ -23,22 +24,26 @@ export default function QuizResult({
   total,
   wrongQuestions,
   onRestart,
+  strings,
+  locale,
 }: Props) {
-  const tier = getTier(score);
+  const tier = getTier(score, strings.tiers);
   const [averageData, setAverageData] = useState<{
     average: number;
     count: number;
   } | null>(null);
 
   useEffect(() => {
-    fetch("/api/stats/average")
+    fetch(`/api/stats/average?locale=${locale}`)
       .then((r) => r.json())
       .then((data) => setAverageData(data))
       .catch(() => {});
-  }, []);
+  }, [locale]);
 
   async function handleShare() {
-    const shareText = `Я знаю чешский на ${score} / ${total}. А ты?`;
+    const shareText = strings.result.shareTextTemplate
+      .replace("{score}", String(score))
+      .replace("{total}", String(total));
     if (navigator.share) {
       try {
         await navigator.share({ title: shareText, url: QUIZ_URL });
@@ -47,12 +52,12 @@ export default function QuizResult({
       }
     } else {
       await navigator.clipboard.writeText(`${shareText} ${QUIZ_URL}`);
-      // TODO (Step 7): show "Скопировано!" toast
+      // TODO (Step 7): show toast
     }
   }
 
   function handleInstall() {
-    trackEvent("install_clicked");
+    trackEvent("install_clicked", locale);
     if (!PLAY_STORE_URL || PLAY_STORE_URL.includes("PLACEHOLDER")) {
       console.warn("[CFS] NEXT_PUBLIC_PLAY_STORE_URL is not configured");
       return;
@@ -79,7 +84,7 @@ export default function QuizResult({
           </div>
           {averageData && averageData.count > 0 && (
             <p className="text-xs text-muted">
-              Среднее по тесту: {averageData.average} / {total}
+              {strings.result.averageLabel} {averageData.average} / {total}
             </p>
           )}
           <div className="h-px bg-brand mt-4 w-12" />
@@ -93,7 +98,7 @@ export default function QuizResult({
           onClick={handleInstall}
           className="w-full bg-brand hover:bg-brand-dark active:bg-brand-dark text-white py-4 text-base font-bold rounded-xl transition-colors mb-2 min-h-[56px]"
         >
-          Установить CFS — 7 дней бесплатно
+          {strings.result.installBtn}
         </button>
         <p className="text-xs text-center text-muted mb-8">{tier.subtext}</p>
 
@@ -102,14 +107,14 @@ export default function QuizResult({
           onClick={handleShare}
           className="w-full border border-brand text-brand hover:bg-brand/5 active:bg-brand/10 py-3.5 text-sm font-semibold rounded-xl transition-colors mb-10 min-h-[52px]"
         >
-          Поделиться результатом
+          {strings.result.shareBtn}
         </button>
 
         {/* Wrong answers — value for non-converters */}
         {wrongQuestions.length > 0 && (
           <section className="mb-10">
             <h2 className="text-xs uppercase tracking-widest text-muted mb-4">
-              Слова, которые вас поймали
+              {strings.result.wrongSectionLabel}
             </h2>
             <ul className="flex flex-col gap-3">
               {wrongQuestions.map(({ sq }) => (
@@ -123,7 +128,7 @@ export default function QuizResult({
                   <div className="h-px bg-brand w-8" />
                   <span className="text-sm text-text">{sq.question.czechMeaning}</span>
                   <span className="text-xs text-muted">
-                    не «{sq.question.russianTrapMeaning}»
+                    {strings.result.wrongNotPrefix}{sq.question.russianTrapMeaning}{strings.result.wrongNotSuffix}
                   </span>
                 </li>
               ))}
@@ -135,7 +140,7 @@ export default function QuizResult({
           onClick={onRestart}
           className="text-xs text-muted underline underline-offset-2"
         >
-          Пройти снова
+          {strings.result.restartBtn}
         </button>
       </main>
     </div>

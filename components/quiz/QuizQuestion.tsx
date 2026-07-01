@@ -1,4 +1,5 @@
 import type { SessionQuestion } from "@/lib/quiz-engine";
+import type { Strings } from "@/lib/i18n/types";
 
 type Phase = "question" | "feedback";
 
@@ -10,6 +11,7 @@ type Props = {
   selectedIndex: number | null;
   onAnswer: (optionIndex: number) => void;
   onNext: () => void;
+  strings: Strings;
 };
 
 export default function QuizQuestion({
@@ -20,6 +22,7 @@ export default function QuizQuestion({
   selectedIndex,
   onAnswer,
   onNext,
+  strings,
 }: Props) {
   const { question, options, correctIndex } = sessionQuestion;
   const isCorrect = selectedIndex === correctIndex;
@@ -70,7 +73,7 @@ export default function QuizQuestion({
 
         {/* Prompt */}
         <p className="text-xs text-muted uppercase tracking-widest mb-4">
-          Что значит по-чешски?
+          {strings.question.prompt}
         </p>
 
         {/* Answer options */}
@@ -95,12 +98,12 @@ export default function QuizQuestion({
         {phase === "feedback" && (
           <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-3">
             <p className={`font-semibold text-sm ${isCorrect ? "text-correct" : "text-wrong"}`}>
-              {isCorrect ? "✓ Правильно!" : "✗ Неверно."}
+              {isCorrect ? strings.question.correct : strings.question.wrong}
             </p>
             <div className="h-px bg-border" />
             <p className="text-sm">
               <span className="font-bold font-serif">{question.czechWord}</span>{" "}
-              по-чешски — {question.czechMeaning}.
+              {strings.question.meaningOf} {question.czechMeaning}.
             </p>
             <p className="text-sm text-muted leading-relaxed">{question.explanation}</p>
             <blockquote className="border-l-2 border-brand pl-3 flex flex-col gap-1 text-xs text-muted italic">
@@ -111,7 +114,7 @@ export default function QuizQuestion({
               onClick={onNext}
               className="w-full mt-1 bg-brand hover:bg-brand-dark active:bg-brand-dark text-white py-3.5 text-sm font-semibold rounded-xl transition-colors min-h-[52px]"
             >
-              {questionNumber === total ? "Результаты →" : "Дальше →"}
+              {questionNumber === total ? strings.question.results : strings.question.next}
             </button>
           </div>
         )}

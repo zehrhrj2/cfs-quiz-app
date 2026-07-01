@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Lora } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
+import { strings } from "@/lib/i18n/ru";
 
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
 });
 
-// Serif for Czech word display — carries the lexicographic motif
 const lora = Lora({
   subsets: ["latin", "latin-ext"],
   weight: ["700"],
@@ -16,18 +16,17 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Знаешь ли ты чешский? | Czech for Slavs",
-  description:
-    "Тест на ложные друзья: 15 слов, которые путают русскоязычных.",
+  title: strings.meta.title,
+  description: strings.meta.description,
   openGraph: {
-    title: "Знаешь ли ты чешский?",
-    description: "15 слов. 4 варианта. Посмотрим, поймаешь ли.",
+    title: strings.meta.og.title,
+    description: strings.meta.og.description,
     url: "https://test.czechforslavs.com",
     siteName: "Czech for Slavs",
   },
 };
 
-export default function RootLayout({
+export default function RuLayout({
   children,
 }: {
   children: React.ReactNode;

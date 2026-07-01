@@ -5,6 +5,7 @@ import { FALSE_FRIENDS } from "@/data/false-friends";
 import { buildSession, type SessionQuestion } from "@/lib/quiz-engine";
 import { QUESTIONS_PER_SESSION } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
+import type { Strings } from "@/lib/i18n/types";
 import QuizIntro from "./QuizIntro";
 import QuizQuestion from "./QuizQuestion";
 import QuizResult from "./QuizResult";
@@ -59,7 +60,15 @@ function reducer(state: QuizState, action: Action): QuizState {
   }
 }
 
-export default function QuizClient({ initialSrc }: { initialSrc: string | null }) {
+export default function QuizClient({
+  initialSrc,
+  strings,
+  locale,
+}: {
+  initialSrc: string | null;
+  strings: Strings;
+  locale: "ru" | "uk";
+}) {
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const questionStartRef = useRef(Date.now());
 
@@ -100,7 +109,7 @@ export default function QuizClient({ initialSrc }: { initialSrc: string | null }
     } else if (!existing) {
       localStorage.setItem("cfs_quiz_src", "direct");
     }
-    trackEvent("quiz_opened");
+    trackEvent("quiz_opened", locale);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -110,7 +119,7 @@ export default function QuizClient({ initialSrc }: { initialSrc: string | null }
     const score = state.answers.filter(
       (ans, i) => ans !== null && ans === state.questions[i]?.correctIndex
     ).length;
-    trackEvent("quiz_completed", { score });
+    trackEvent("quiz_completed", locale, { score });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
@@ -136,7 +145,7 @@ export default function QuizClient({ initialSrc }: { initialSrc: string | null }
   }
 
   if (state.phase === "intro") {
-    return <QuizIntro onStart={handleStart} />;
+    return <QuizIntro onStart={handleStart} strings={strings} />;
   }
 
   if (state.phase === "question" || state.phase === "feedback") {
@@ -150,6 +159,7 @@ export default function QuizClient({ initialSrc }: { initialSrc: string | null }
         selectedIndex={state.answers[state.currentIndex]}
         onAnswer={handleAnswer}
         onNext={handleNext}
+        strings={strings}
       />
     );
   }
@@ -169,6 +179,8 @@ export default function QuizClient({ initialSrc }: { initialSrc: string | null }
       total={QUESTIONS_PER_SESSION}
       wrongQuestions={wrongQuestions}
       onRestart={handleRestart}
+      strings={strings}
+      locale={locale}
     />
   );
 }
