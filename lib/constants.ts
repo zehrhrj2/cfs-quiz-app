@@ -1,13 +1,8 @@
 export const QUESTIONS_PER_SESSION = 15;
 
-// TODO: replace with real Play Store URL before launch
-export const PLAY_STORE_URL =
-  "https://play.google.com/store/apps/details?id=PLACEHOLDER";
+export const PLAY_STORE_URL = process.env.NEXT_PUBLIC_PLAY_STORE_URL ?? "";
 
 export const QUIZ_URL = "https://test.czechforslavs.com";
-
-// TODO: wire AVERAGE_SCORE to real analytics aggregate (Step 6)
-export const AVERAGE_SCORE = 8;
 
 export const TIER_CONFIG = [
   {

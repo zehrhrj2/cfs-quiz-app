@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  PLAY_STORE_URL,
-  QUIZ_URL,
-  TIER_CONFIG,
-  AVERAGE_SCORE,
-} from "@/lib/constants";
-import { analytics } from "@/lib/analytics";
+import { useState, useEffect } from "react";
+import { PLAY_STORE_URL, QUIZ_URL, TIER_CONFIG } from "@/lib/constants";
+import { trackEvent } from "@/lib/analytics";
 import type { SessionQuestion } from "@/lib/quiz-engine";
 
 type Props = {
@@ -29,25 +25,38 @@ export default function QuizResult({
   onRestart,
 }: Props) {
   const tier = getTier(score);
+  const [averageData, setAverageData] = useState<{
+    average: number;
+    count: number;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stats/average")
+      .then((r) => r.json())
+      .then((data) => setAverageData(data))
+      .catch(() => {});
+  }, []);
 
   async function handleShare() {
     const shareText = `Я знаю чешский на ${score} / ${total}. А ты?`;
     if (navigator.share) {
       try {
         await navigator.share({ title: shareText, url: QUIZ_URL });
-        analytics.resultShared("native");
       } catch {
         // user cancelled — no-op
       }
     } else {
       await navigator.clipboard.writeText(`${shareText} ${QUIZ_URL}`);
-      analytics.resultShared("copy");
       // TODO (Step 7): show "Скопировано!" toast
     }
   }
 
   function handleInstall() {
-    analytics.installClicked(score);
+    trackEvent("install_clicked");
+    if (!PLAY_STORE_URL || PLAY_STORE_URL.includes("PLACEHOLDER")) {
+      console.warn("[CFS] NEXT_PUBLIC_PLAY_STORE_URL is not configured");
+      return;
+    }
     window.open(PLAY_STORE_URL, "_blank", "noopener");
   }
 
@@ -68,10 +77,11 @@ export default function QuizResult({
             </span>
             <span className="text-2xl text-muted font-normal mb-2">/ {total}</span>
           </div>
-          {/* TODO (Step 6): replace AVERAGE_SCORE with real aggregate */}
-          <p className="text-xs text-muted">
-            Среднее по тесту: {AVERAGE_SCORE} / {total}
-          </p>
+          {averageData && averageData.count > 0 && (
+            <p className="text-xs text-muted">
+              Среднее по тесту: {averageData.average} / {total}
+            </p>
+          )}
           <div className="h-px bg-brand mt-4 w-12" />
         </div>
 

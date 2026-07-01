@@ -4,7 +4,7 @@ import { useReducer, useEffect, useRef } from "react";
 import { FALSE_FRIENDS } from "@/data/false-friends";
 import { buildSession, type SessionQuestion } from "@/lib/quiz-engine";
 import { QUESTIONS_PER_SESSION } from "@/lib/constants";
-import { analytics } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
 import QuizIntro from "./QuizIntro";
 import QuizQuestion from "./QuizQuestion";
 import QuizResult from "./QuizResult";
@@ -59,7 +59,7 @@ function reducer(state: QuizState, action: Action): QuizState {
   }
 }
 
-export default function QuizClient({ initialRef }: { initialRef: string }) {
+export default function QuizClient({ initialSrc }: { initialSrc: string | null }) {
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const questionStartRef = useRef(Date.now());
 
@@ -91,27 +91,40 @@ export default function QuizClient({ initialRef }: { initialRef: string }) {
     }
   }, [state.phase, state.currentIndex]);
 
+  // Store src attribution in localStorage (first visit wins; explicit ?src= always wins)
+  // then fire quiz_opened — both in one effect so src is guaranteed to be set first
+  useEffect(() => {
+    const existing = localStorage.getItem("cfs_quiz_src");
+    if (initialSrc) {
+      localStorage.setItem("cfs_quiz_src", initialSrc);
+    } else if (!existing) {
+      localStorage.setItem("cfs_quiz_src", "direct");
+    }
+    trackEvent("quiz_opened");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fire quiz_completed when the result phase is reached
+  useEffect(() => {
+    if (state.phase !== "result") return;
+    const score = state.answers.filter(
+      (ans, i) => ans !== null && ans === state.questions[i]?.correctIndex
+    ).length;
+    trackEvent("quiz_completed", { score });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase]);
+
   function handleStart() {
     const questions = buildSession(FALSE_FRIENDS);
-    analytics.quizStarted(initialRef);
     dispatch({ type: "START", questions });
   }
 
   function handleAnswer(optionIndex: number) {
-    const timeMs = Date.now() - questionStartRef.current;
-    const sq = state.questions[state.currentIndex];
-    const correct = optionIndex === sq.correctIndex;
-    analytics.questionAnswered(sq.question.id, correct, timeMs);
     dispatch({ type: "ANSWER", optionIndex });
   }
 
   function handleNext() {
-    const isLast = state.currentIndex === QUESTIONS_PER_SESSION - 1;
-    if (isLast) {
-      const score = state.answers.filter(
-        (ans, i) => ans === state.questions[i]?.correctIndex
-      ).length;
-      analytics.quizCompleted(score, QUESTIONS_PER_SESSION);
+    if (state.currentIndex === QUESTIONS_PER_SESSION - 1) {
       sessionStorage.removeItem(SESSION_KEY);
     }
     dispatch({ type: "NEXT" });
