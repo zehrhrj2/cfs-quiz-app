@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducer, useEffect, useRef } from "react";
-import { FALSE_FRIENDS } from "@/data/false-friends";
+import { FALSE_FRIENDS, type FalseFriend } from "@/data/false-friends";
 import { buildSession, type SessionQuestion } from "@/lib/quiz-engine";
 import { QUESTIONS_PER_SESSION } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
@@ -64,10 +64,12 @@ export default function QuizClient({
   initialSrc,
   strings,
   locale,
+  pairs = FALSE_FRIENDS,
 }: {
   initialSrc: string | null;
   strings: Strings;
   locale: "ru" | "uk";
+  pairs?: FalseFriend[];
 }) {
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const questionStartRef = useRef(Date.now());
@@ -124,7 +126,7 @@ export default function QuizClient({
   }, [state.phase]);
 
   function handleStart() {
-    const questions = buildSession(FALSE_FRIENDS);
+    const questions = buildSession(pairs);
     dispatch({ type: "START", questions });
   }
 
