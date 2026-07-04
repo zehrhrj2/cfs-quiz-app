@@ -30,7 +30,7 @@ export const strings: Strings = {
   },
   result: {
     averageLabel: "Среднее по тесту:",
-    installBtn: "Установить CFS — 7 дней бесплатно",
+    installBtn: "Установить CFS — бесплатно",
     shareBtn: "Поделиться результатом",
     shareTextTemplate: "Я знаю чешский на {score} / {total}. А ты?",
     wrongSectionLabel: "Слова, которые вас поймали",
@@ -49,7 +49,7 @@ export const strings: Strings = {
       min: 6,
       max: 10,
       text: "Неплохо, но язык всё ещё ставит ловушки. Самое время закрыть пробелы.",
-      subtext: "7 дней бесплатно — посмотрите, что вы пропускаете.",
+      subtext: "Бесплатно — посмотрите, что вы пропускаете.",
     },
     {
       min: 11,

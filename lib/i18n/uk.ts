@@ -85,9 +85,9 @@ export const strings: Strings = {
     averageLabel: "Середній результат:",
     // EN: "Average for the test:"
 
-    // RU: "Установить CFS — 7 дней бесплатно"
-    installBtn: "Встановити CFS — 7 днів безкоштовно",
-    // EN: "Install CFS — 7 days free"
+    // RU: "Установить CFS — бесплатно"
+    installBtn: "Встановити CFS — безкоштовно",
+    // EN: "Install CFS — free"
 
     // RU: "Поделиться результатом"
     shareBtn: "Поділитися результатом",
@@ -132,9 +132,9 @@ export const strings: Strings = {
       text: "Непогано, але мова все ще ставить пастки. Саме час закрити прогалини.",
       // EN: "Not bad, but the language still sets traps. Time to close the gaps."
 
-      // RU: "7 дней бесплатно — посмотрите, что вы пропускаете."
-      subtext: "7 днів безкоштовно — подивіться, що ви пропускаєте.",
-      // EN: "7 days free — see what you're missing."
+      // RU: "Бесплатно — посмотрите, что вы пропускаете."
+      subtext: "Безкоштовно — подивіться, що ви пропускаєте.",
+      // EN: "Free — see what you're missing."
     },
     {
       min: 11,

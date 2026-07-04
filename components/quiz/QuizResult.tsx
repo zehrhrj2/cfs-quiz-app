@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PLAY_STORE_URL, QUIZ_URL } from "@/lib/constants";
+import { PLAY_STORE_URL } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
 import type { SessionQuestion } from "@/lib/quiz-engine";
 import type { Strings } from "@/lib/i18n/types";
@@ -44,14 +44,15 @@ export default function QuizResult({
     const shareText = strings.result.shareTextTemplate
       .replace("{score}", String(score))
       .replace("{total}", String(total));
+    const shareUrl = `${window.location.origin}${window.location.pathname}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: shareText, url: QUIZ_URL });
+        await navigator.share({ title: shareText, url: shareUrl });
       } catch {
         // user cancelled — no-op
       }
     } else {
-      await navigator.clipboard.writeText(`${shareText} ${QUIZ_URL}`);
+      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
       // TODO (Step 7): show toast
     }
   }
